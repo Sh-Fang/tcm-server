@@ -1,5 +1,5 @@
 #include "tc_misc.h"
-#include "../utils/mem.h"
+#include "mem.h"
 
 
 
@@ -139,7 +139,7 @@ void Misc::write_result(IO *tc_io, Arg *tc_arg, GlobalIndex *tc_global_index, Se
             outfile << std::endl;
             max_result_number += 1;
 
-            if(max_result_number > 1000000){  //Avoiding excessively large match.result files.
+            if(max_result_number > 1000000){  //Avoiding excessively large match.match_result files.
                 break;
             }
         }

@@ -2,7 +2,7 @@
 #define TCM_TC_ARG_H
 
 #include <iostream>
-#include "../utils/CLI11.hpp"
+#include "CLI11.hpp"
 
 class Arg{
 public:

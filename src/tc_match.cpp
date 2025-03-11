@@ -1,20 +1,9 @@
-#include <iostream>
-#include <csignal>
-#include <unistd.h>
+//
+// Created by Oasis on 2025/3/11.
+//
 
-#include "matching/tc_basic_type.h"
-#include "matching/tc_arg.h"
-#include "matching/tc_io.h"
-#include "matching/tc_offline_index.h"
-#include "matching/tc_match_order.h"
-#include "matching/tc_global_index.h"
-#include "matching/tc_search.h"
-#include "matching/tc_misc.h"
-#include "matching/tc_g_index.h"
+#include "tc_match.h"
 
-
-
-//==Signal processing function==============================
 void signal_handler_index(int signum) {
     std::cout << "tcm: out of index time" << std::endl;
     exit(1);
@@ -24,14 +13,8 @@ void signal_handler_online(int signum) {
     std::cout << "tcm: out of online time" << std::endl;
     exit(1);
 }
-//================================
 
-
-
-
-
-int main(int argc, char * argv[]){
-
+std::string TCMatch(const std::string &path_of_stream, const std::string &path_of_query) {
     auto* tc_arg = new Arg();
     auto* tc_io = new IO();
     auto* tc_offline_index = new OfflineIndex();
@@ -41,31 +24,17 @@ int main(int argc, char * argv[]){
     auto* tc_misc = new Misc();
     auto* tc_g_index = new GIndex();
 
-    //============Parsing parameters====================================
-    if(argc > 1){
-        tc_arg->parse_arg(argc, argv);
-    } else{   //Customizable parameters
-        std::string dataset = "caida";
-        std::string query_type = "dense4";
-        std::string query_name = "15_2_3";
-#ifdef _WIN32
-        tc_arg->path_of_stream = R"(C:\Users\Oasis\Desktop\TimeCostCompare\dataset\)" + dataset + R"(\)" + dataset + R"(.txt)";
-        tc_arg->path_of_query = R"(C:\Users\Oasis\Desktop\TimeCostCompare\dataset\)" + dataset + R"(\)" + query_type + R"(\)" + query_name + R"(.txt)";
-#elif __linux__
-        tc_arg->path_of_stream = R"(/mnt/c/Users/Oasis/Desktop/TimeCostCompare/dataset/)" + dataset + R"(/)" + dataset + R"(.txt)";
-        tc_arg->path_of_query = R"(/mnt/c/Users/Oasis/Desktop/TimeCostCompare/dataset/)"+ dataset + R"(/)" + query_type + R"(/)" + query_name + R"(.txt)";
-#endif
+    tc_arg->path_of_stream = path_of_stream;
+    tc_arg->path_of_query = path_of_query;
 
-        tc_arg->path_of_result = R"(./)";
-        tc_arg->result_mode = "qid";
-        tc_arg->execute_mode = "enum";
-        tc_arg->is_using_static_merge = "y";
-        tc_arg->data_percent = "0.6";
-        tc_arg->index_time_limit = "36000";
-        tc_arg->online_time_limit = "3600";
-        tc_arg->is_using_dynamic_merge = "y";
-
-    }
+    tc_arg->path_of_result = R"(./)";
+    tc_arg->result_mode = "qid";
+    tc_arg->execute_mode = "enum";
+    tc_arg->is_using_static_merge = "y";
+    tc_arg->data_percent = "0.6";
+    tc_arg->index_time_limit = "36000";
+    tc_arg->online_time_limit = "3600";
+    tc_arg->is_using_dynamic_merge = "y";
 
     //=======================================================
     tc_arg->parse_dataset_name();
@@ -90,6 +59,7 @@ int main(int argc, char * argv[]){
     std::cerr << "update valid: " << tc_io->valid_update_edge_num << " / ";
     std::cerr << "total update: " << tc_io->total_update_edge_num << " / ";
     std::cerr << "valid percentage: " << ((double)tc_io->valid_update_edge_num / (double)tc_io->total_update_edge_num) * 100.0 << "% / ";
+
 
     //=====Starting the build phase.======
 #ifdef __linux__
@@ -180,10 +150,7 @@ int main(int argc, char * argv[]){
     }
     tc_misc->statistical_info << "match count: " << tc_search->match_count<< std::endl;
 
-    std::cout << tc_misc->statistical_info.str() << std::endl;
-
-    //============write result====================================
-    tc_misc->write_result(tc_io, tc_arg, tc_global_index, tc_search, tc_order, tc_misc);
+    auto result = tc_misc->statistical_info.str();
 
     //============Clearing the memory====================================
     delete tc_arg;
@@ -195,5 +162,5 @@ int main(int argc, char * argv[]){
     delete tc_misc;
 
 
-    return 0;
+    return result;
 }

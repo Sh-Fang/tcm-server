@@ -1,16 +1,18 @@
 #include "httpHandle.h"
+#include "tc_match.h"
 #include "jsonHandle.h"
 
 // 处理 HTTP 请求
-void handleRequest(const httplib::Request& req, httplib::Response& res) {
+void handleMatch(const httplib::Request& req, httplib::Response& res) {
     try {
         json request_json = json::parse(req.body);
-        Input input = parseInput(request_json);
+        jsonInput input = parseInput(request_json);
 
-        Output output = Matching(input.stream_path,input.query_path);
+        jsonOutput output;
+        output.match_result = TCMatch(input.stream_path, input.query_path);
 
         json response_json;
-        response_json["result"] = output.result;
+        response_json["match_result"] = output.match_result;
 
         res.set_content(response_json.dump(), "application/json");
     } catch (const std::exception&) {

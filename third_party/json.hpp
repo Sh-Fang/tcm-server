@@ -6181,7 +6181,7 @@ enum class input_format_t { json, cbor, msgpack, ubjson, bson, bjdata };
 
 #ifndef JSON_NO_IO
 /*!
-Input adapter for stdio file access. This adapter read only 1 byte and do not use any
+jsonInput adapter for stdio file access. This adapter read only 1 byte and do not use any
  buffer. This adapter is a very low level adapter.
 */
 class file_input_adapter
@@ -6214,7 +6214,7 @@ class file_input_adapter
 };
 
 /*!
-Input adapter for a (caching) istream. Ignores a UFT Byte Order Mark at
+jsonInput adapter for a (caching) istream. Ignores a UFT Byte Order Mark at
 beginning of input. Does not support changing the underlying std::streambuf
 in mid-input. Maintains underlying std::istream and std::streambuf to support
 subsequent use of standard std::istream operations to process any input
@@ -7723,7 +7723,7 @@ class lexer : public lexer_base<BasicJsonType>
                                                         // low surrogate occupies the least significant 15 bits
                                                         + static_cast<unsigned int>(codepoint2)
                                                         // there is still the 0xD800, 0xDC00 and 0x10000 noise
-                                                        // in the result, so we have to subtract with:
+                                                        // in the match_result, so we have to subtract with:
                                                         // (0xD800 << 10) + DC00 - 0x10000 = 0x35FDC00
                                                         - 0x35FDC00u);
                                     }
@@ -7748,7 +7748,7 @@ class lexer : public lexer_base<BasicJsonType>
                                 }
                             }
 
-                            // result of the above calculation yields a proper codepoint
+                            // match_result of the above calculation yields a proper codepoint
                             JSON_ASSERT(0x00 <= codepoint && codepoint <= 0x10FFFF);
 
                             // translate codepoint into bytes
@@ -11329,7 +11329,7 @@ class binary_reader
                     for (auto i : dim)
                     {
                         result *= i;
-                        if (result == 0 || result == npos) // because dim elements shall not have zeros, result = 0 means overflow happened; it also can't be npos as it is used to initialize size in get_ubjson_size_type()
+                        if (result == 0 || result == npos) // because dim elements shall not have zeros, match_result = 0 means overflow happened; it also can't be npos as it is used to initialize size in get_ubjson_size_type()
                         {
                             return sax->parse_error(chars_read, get_token_string(), out_of_range::create(408, exception_message(input_format, "excessive ndarray size caused overflow", "size"), nullptr));
                         }
@@ -11918,7 +11918,7 @@ class binary_reader
 
     @tparam NumberType the type of the number
     @param[in] format   the current format (for diagnostics)
-    @param[out] result  number of type @a NumberType
+    @param[out] match_result  number of type @a NumberType
 
     @return whether conversion completed
 
@@ -11967,7 +11967,7 @@ class binary_reader
 
     @return whether string creation completed
 
-    @note We can not reserve @a len bytes for the result, because @a len
+    @note We can not reserve @a len bytes for the match_result, because @a len
           may be too large. Usually, @ref unexpect_eof() detects the end of
           the input before we run out of string memory.
     */
@@ -12000,7 +12000,7 @@ class binary_reader
 
     @return whether byte array creation completed
 
-    @note We can not reserve @a len bytes for the result, because @a len
+    @note We can not reserve @a len bytes for the match_result, because @a len
           may be too large. Usually, @ref unexpect_eof() detects the end of
           the input before we run out of memory.
     */
@@ -14532,7 +14532,7 @@ class json_pointer
     /*!
     @param[in] reference_string  the reference string to the current value
     @param[in] value             the value to consider
-    @param[in,out] result        the result object to insert values to
+    @param[in,out] result        the match_result object to insert values to
 
     @note Empty objects or arrays are flattened to `null`.
     */
@@ -14628,7 +14628,7 @@ class json_pointer
 
             // assign value to reference pointed to by JSON pointer; Note that if
             // the JSON pointer is "" (i.e., points to the whole value), function
-            // get_and_create returns a reference to result itself. An assignment
+            // get_and_create returns a reference to match_result itself. An assignment
             // will then create a primitive value.
             json_pointer(element.first).get_and_create(result) = element.second;
         }
@@ -16984,7 +16984,7 @@ struct diyfp // f * 2^e
 
     /*!
     @brief returns x * y
-    @note The result is rounded. (Only the upper q bits are returned.)
+    @note The match_result is rounded. (Only the upper q bits are returned.)
     */
     static diyfp mul(const diyfp& x, const diyfp& y) noexcept
     {
@@ -17065,7 +17065,7 @@ struct diyfp // f * 2^e
     }
 
     /*!
-    @brief normalize x such that the result has the exponent E
+    @brief normalize x such that the match_result has the exponent E
     @pre e >= x.e and the upper e - x.e bits of x.f must be zero.
     */
     static diyfp normalize_to(const diyfp& x, const int target_exponent) noexcept
@@ -17250,7 +17250,7 @@ inline cached_power get_cached_power_for_binary_exponent(int e)
     //        = ceil( (alpha - e - 1) * log_10(2) )
     //
     // From the paper:
-    // "In theory the result of the procedure could be wrong since c is rounded,
+    // "In theory the match_result of the procedure could be wrong since c is rounded,
     //  and the computation itself is approximated [...]. In practice, however,
     //  this simple function is sufficient."
     //
@@ -17760,7 +17760,7 @@ inline void grisu2(char* buf, int& len, int& decimal_exponent,
     //          w-                      w                       w+
     //          = c*m-                  = c*v                   = c*m+
     //
-    // diyfp::mul rounds its result and c_minus_k is approximated too. w, w- and
+    // diyfp::mul rounds its match_result and c_minus_k is approximated too. w, w- and
     // w+ are now off by a small amount.
     // In fact:
     //
@@ -17964,7 +17964,7 @@ format. Returns an iterator pointing past-the-end of the decimal representation.
 
 @note The input number must be finite, i.e. NaN's and Inf's are not supported.
 @note The buffer must be large enough.
-@note The result is NOT null-terminated.
+@note The match_result is NOT null-terminated.
 */
 template<typename FloatType>
 JSON_HEDLEY_NON_NULL(1, 2)
@@ -18107,7 +18107,7 @@ class serializer
     @param[in] val               value to serialize
     @param[in] pretty_print      whether the output shall be pretty-printed
     @param[in] ensure_ascii If @a ensure_ascii is true, all non-ASCII characters
-    in the output are escaped with `\uXXXX` sequences, and the result consists
+    in the output are escaped with `\uXXXX` sequences, and the match_result consists
     of ASCII characters only.
     @param[in] indent_step       the indent level
     @param[in] current_indent    the current indent level (only used internally)
@@ -18769,7 +18769,7 @@ class serializer
         JSON_ASSERT(n_chars < number_buffer.size() - 1);
 
         // jump to the end to generate the string from backward,
-        // so we later avoid reversing the result
+        // so we later avoid reversing the match_result
         buffer_ptr += n_chars;
 
         // Fast int2ascii implementation inspired by "Fastware" talk by Andrei Alexandrescu
@@ -18888,7 +18888,7 @@ class serializer
     @brief check whether a string is UTF-8 encoded
 
     The function checks each byte of a string whether it is UTF-8 encoded. The
-    result of the check is stored in the @a state parameter. The function must
+    match_result of the check is stored in the @a state parameter. The function must
     be called initially with state 0 (accept). State 1 means the string must
     be rejected, because the current byte is not allowed. If the string is
     completely processed, but the state is non-zero, the string ended
@@ -22553,7 +22553,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         auto res = m_data.m_value.object->emplace(std::forward<Args>(args)...);
         set_parent(res.first->second);
 
-        // create result iterator and set iterator to the result of emplace
+        // create match_result iterator and set iterator to the match_result of emplace
         auto it = begin();
         it.m_it.object_iterator = res.first;
 
@@ -22575,7 +22575,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         result.m_it.array_iterator = m_data.m_value.array->begin() + insert_pos;
 
         // This could have been written as:
-        // result.m_it.array_iterator = m_data.m_value.array->insert(pos.m_it.array_iterator, cnt, val);
+        // match_result.m_it.array_iterator = m_data.m_value.array->insert(pos.m_it.array_iterator, cnt, val);
         // but the return value of insert is missing in GCC 4.8, so it is written this way instead.
 
         set_parents();
@@ -24158,7 +24158,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
                     JSON_THROW(parse_error::create(105, 0, detail::concat(error_msg, " must have member '", member, "'"), &val));
                 }
 
-                // check if result is of type string
+                // check if match_result is of type string
                 if (JSON_HEDLEY_UNLIKELY(string_type && !it->second.is_string()))
                 {
                     // NOLINTNEXTLINE(performance-inefficient-string-concatenation)

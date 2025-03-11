@@ -918,7 +918,7 @@ private:
 
 /**
  * Performs std::regex_match on request path
- * and stores the result in Request::matches
+ * and stores the match_result in Request::matches
  *
  * Note that regex match is performed directly on the whole request.
  * This means that wildcard patterns may match multiple path segments with /:
@@ -2856,7 +2856,7 @@ inline std::string encode_url(const std::string &s) {
     case '\n': result += "%0A"; break;
     case '\'': result += "%27"; break;
     case ',': result += "%2C"; break;
-    // case ':': result += "%3A"; break; // ok? probably...
+    // case ':': match_result += "%3A"; break; // ok? probably...
     case ';': result += "%3B"; break;
     default:
       auto c = static_cast<uint8_t>(s[i]);
@@ -5476,7 +5476,7 @@ inline bool load_system_certs_on_windows(X509_STORE *store) {
   auto hStore = CertOpenSystemStoreW((HCRYPTPROV_LEGACY)NULL, L"ROOT");
   if (!hStore) { return false; }
 
-  auto result = false;
+  auto match_result = false;
   PCCERT_CONTEXT pContext = NULL;
   while ((pContext = CertEnumCertificatesInStore(hStore, pContext)) !=
          nullptr) {
@@ -5487,14 +5487,14 @@ inline bool load_system_certs_on_windows(X509_STORE *store) {
     if (x509) {
       X509_STORE_add_cert(store, x509);
       X509_free(x509);
-      result = true;
+      match_result = true;
     }
   }
 
   CertFreeCertificateContext(pContext);
   CertCloseStore(hStore, 0);
 
-  return result;
+  return match_result;
 }
 #elif defined(CPPHTTPLIB_USE_CERTS_FROM_MACOSX_KEYCHAIN) && defined(__APPLE__)
 #if TARGET_OS_OSX
@@ -5541,7 +5541,7 @@ inline bool retrieve_root_certs_from_keychain(CFObjectPtr<CFArrayRef> &certs) {
 }
 
 inline bool add_certs_to_x509_store(CFArrayRef certs, X509_STORE *store) {
-  auto result = false;
+  auto match_result = false;
   for (auto i = 0; i < CFArrayGetCount(certs); ++i) {
     const auto cert = reinterpret_cast<const __SecCertificate *>(
         CFArrayGetValueAtIndex(certs, i));
@@ -5565,25 +5565,25 @@ inline bool add_certs_to_x509_store(CFArrayRef certs, X509_STORE *store) {
     if (x509) {
       X509_STORE_add_cert(store, x509);
       X509_free(x509);
-      result = true;
+      match_result = true;
     }
   }
 
-  return result;
+  return match_result;
 }
 
 inline bool load_system_certs_on_macos(X509_STORE *store) {
-  auto result = false;
+  auto match_result = false;
   CFObjectPtr<CFArrayRef> certs(nullptr, cf_object_ptr_deleter);
   if (retrieve_certs_from_keychain(certs) && certs) {
-    result = add_certs_to_x509_store(certs.get(), store);
+    match_result = add_certs_to_x509_store(certs.get(), store);
   }
 
   if (retrieve_root_certs_from_keychain(certs) && certs) {
-    result = add_certs_to_x509_store(certs.get(), store) || result;
+    match_result = add_certs_to_x509_store(certs.get(), store) || match_result;
   }
 
-  return result;
+  return match_result;
 }
 #endif // TARGET_OS_OSX
 #endif // _WIN32
@@ -9317,7 +9317,7 @@ inline bool SSLServer::process_and_close_socket(socket_t sock) {
                                  [&](Request &req) { req.ssl = ssl; });
         });
 
-    // Shutdown gracefully if the result seemed successful, non-gracefully if
+    // Shutdown gracefully if the match_result seemed successful, non-gracefully if
     // the connection appeared to be closed.
     const bool shutdown_gracefully = ret;
     detail::ssl_delete(ctx_mutex_, ssl, sock, shutdown_gracefully);

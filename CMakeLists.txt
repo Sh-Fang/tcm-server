@@ -9,7 +9,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include_directories(include third_party)
 
 # 添加源文件
-add_executable(TCMServer src/main.cpp src/httpHandle.cpp src/jsonHandle.cpp)
+add_executable(TCMServer
+        src/main.cpp
+        src/httpHandle.cpp
+        src/jsonHandle.cpp
+        src/tc_arg.cpp
+        src/tc_g_index.cpp
+        src/tc_global_index.cpp
+        src/tc_io.cpp
+        src/tc_match_order.cpp
+        src/tc_misc.cpp
+        src/tc_offline_index.cpp
+        src/tc_search.cpp
+        src/tc_match.cpp)
 
 # 链接 pthread 线程库（httplib库需要）
 find_package(Threads REQUIRED)

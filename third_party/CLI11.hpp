@@ -163,7 +163,7 @@ constexpr int expected_max_vector_size{1 << 29};
 /// Split a string by a delim
 inline std::vector<std::string> split(const std::string &s, char delim) {
     std::vector<std::string> elems;
-    // Check to see if empty string, give consistent result
+    // Check to see if empty string, give consistent match_result
     if(s.empty()) {
         elems.emplace_back();
     } else {
@@ -3296,7 +3296,7 @@ class IsMember : public Validator {
                 return std::string{};
             }
 
-            // If you reach this point, the result was not found
+            // If you reach this point, the match_result was not found
             return input + " not in " + detail::generate_set(detail::smart_deref(set));
         };
     }
@@ -3468,7 +3468,7 @@ inline std::string ignore_space(std::string item) {
 ///   one can recognize inputs like "100", "12kb", "100 MB",
 ///   that will be automatically transformed to 100, 14448, 104857600.
 ///
-/// Output number type matches the type in the provided mapping.
+/// jsonOutput number type matches the type in the provided mapping.
 /// Therefore, if it is required to interpret real inputs like "0.42 s",
 /// the mapping should be of a type <string, float> or <string, double>.
 class AsNumberWithUnit : public Validator {
@@ -3498,7 +3498,7 @@ class AsNumberWithUnit : public Validator {
 
             detail::rtrim(input);
             if(input.empty()) {
-                throw ValidationError("Input is empty");
+                throw ValidationError("jsonInput is empty");
             }
 
             // Find split position between number and prefix
@@ -4312,7 +4312,7 @@ class Option : public OptionBase<Option> {
         return this;
     }
 
-    /// Adds a Validator-like function that can change result
+    /// Adds a Validator-like function that can change match_result
     Option *transform(const std::function<std::string(std::string)> &func,
                       std::string transform_description = "",
                       std::string transform_name = "") {
@@ -4814,21 +4814,21 @@ class Option : public OptionBase<Option> {
         }
     }
 
-    /// Puts a result at the end
+    /// Puts a match_result at the end
     Option *add_result(std::string s) {
         _add_result(std::move(s), results_);
         current_option_state_ = option_state::parsing;
         return this;
     }
 
-    /// Puts a result at the end and get a count of the number of arguments actually added
+    /// Puts a match_result at the end and get a count of the number of arguments actually added
     Option *add_result(std::string s, int &results_added) {
         results_added = _add_result(std::move(s), results_);
         current_option_state_ = option_state::parsing;
         return this;
     }
 
-    /// Puts a result at the end
+    /// Puts a match_result at the end
     Option *add_result(std::vector<std::string> s) {
         for(auto &str : s) {
             _add_result(std::move(str), results_);
@@ -5118,7 +5118,7 @@ class Option : public OptionBase<Option> {
         }
     }
 
-    // Run a result through the Validators
+    // Run a match_result through the Validators
     std::string _validate(std::string &result, int index) const {
         std::string err_msg;
         if(result.empty() && expected_min_ == 0) {
@@ -5141,7 +5141,7 @@ class Option : public OptionBase<Option> {
         return err_msg;
     }
 
-    /// Add a single result to the result set, taking into account delimiters
+    /// Add a single match_result to the match_result set, taking into account delimiters
     int _add_result(std::string &&result, std::vector<std::string> &res) const {
         int result_count = 0;
         if(allow_extra_args_ && !result.empty() && result.front() == '[' &&
@@ -5955,7 +5955,7 @@ class App {
         return _add_flag_internal(flag_name, CLI::callback_t(), flag_description);
     }
 
-    /// Add option for flag with integer result - defaults to allowing multiple passings, but can be forced to one
+    /// Add option for flag with integer match_result - defaults to allowing multiple passings, but can be forced to one
     /// if `multi_option_policy(CLI::MultiOptionPolicy::Throw)` is used.
     template <typename T,
               enable_if_t<std::is_constructible<T, std::int64_t>::value && !is_bool<T>::value, detail::enabler> =
