@@ -1,11 +1,4 @@
-#include "httplib.h"
-#include "json.hpp"
-#include "handler.h"
-
-#include <chrono>
-#include <iomanip>
-#include <iostream>
-
+#include "httpHandle.h"
 
 int main() {
     httplib::Server server;

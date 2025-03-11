@@ -1,12 +1,5 @@
-#include "handler.h"
-#include "json.hpp"
-
-using json = nlohmann::json;
-
-// 解析 JSON 输入
-Input parseInput(const json& j) {
-    return { j["stream_path"], j["query_path"] };
-}
+#include "httpHandle.h"
+#include "jsonHandle.h"
 
 // 处理 HTTP 请求
 void handleRequest(const httplib::Request& req, httplib::Response& res) {
@@ -22,15 +15,11 @@ void handleRequest(const httplib::Request& req, httplib::Response& res) {
         res.set_content(response_json.dump(), "application/json");
     } catch (const std::exception&) {
         res.status = 400;
-        res.set_content("{\"error\": \"Invalid request\"}", "application/json");
+        res.set_content(R"({"error": "Invalid request"})", "application/json");
     }
 }
 
-Output Matching(std::string& stream_path, std::string& query_path) {
-    Output output;
-    output.result = "Matching: " + stream_path + " - " + query_path;
-    return output;
-}
+
 
 void logRequest(const httplib::Request& req, const httplib::Response& res) {
     // 获取当前时间
