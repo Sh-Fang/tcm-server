@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include_directories(include third_party)
 
 # 添加源文件
-add_executable(TCMServer src/main.cpp src/GraphMatch.cpp)
+add_executable(TCMServer src/main.cpp src/handler.cpp)
 
 # 链接 pthread 线程库（httplib库需要）
 find_package(Threads REQUIRED)
