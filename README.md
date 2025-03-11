@@ -1,2 +1,2 @@
-# tcm-server-client
-tcm server and client
+# tcm-server
+tcm server
