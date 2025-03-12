@@ -1,6 +1,11 @@
 #include "httpHandle.h"
 #include "tc_match.h"
 
+// ==进度条=================================
+int global_progress = 0; // 全局进度变量
+std::string global_status; // 全局状态变量
+// ==进度条=================================
+
 // 处理 HTTP 请求
 void handleMatch(const httplib::Request& req, httplib::Response& res) {
     try {
@@ -16,6 +21,19 @@ void handleMatch(const httplib::Request& req, httplib::Response& res) {
         res.status = 400;
         res.set_content(R"({"error": "Invalid request"})", "application/json");
     }
+}
+
+void handleGetProgress(const httplib::Request& req, httplib::Response& res) {
+    res.set_header("Content-Type", "text/event-stream");
+    res.set_header("Cache-Control", "no-cache");
+    res.set_header("Connection", "keep-alive");
+
+    json json_data;
+    json_data["global_progress"] = std::to_string(global_progress);
+    json_data["global_status"] = global_status;
+
+    res.status = 200;
+    res.set_content(json_data.dump(), "application/json");
 }
 
 
@@ -44,6 +62,7 @@ int startServer() {
     server.set_logger(logRequest);
 
     server.Post("/match", handleMatch);
+    server.Get("/progress", handleGetProgress);
     std::cout << "Server started on http://localhost:8081" << std::endl;
 
     server.listen("0.0.0.0", 8081);

@@ -1,6 +1,8 @@
 #include "tc_global_index.h"
 #include "tc_search.h"
 
+extern int global_progress; // 全局进度变量
+extern std::string global_status; // 全局状态变量
 
 void IndexValueItem::save_in_neighbor_link(IndexKeyItem &save_key, uit vec_position) {
     if(this->neighbor_link.find(save_key) != this->neighbor_link.end()){
@@ -168,7 +170,21 @@ bool
 GlobalIndex::online_process(OfflineIndex *tc_offline_index, Search *tc_search, MatchOrder *tc_order, Arg *tc_arg,
                             GIndex *tc_g_index, IO *tc_io) {
 
+    // ==进度条↓↓↓↓=================================
+    int i = 0;
+    int i_min = 0;
+    int i_max = (int)tc_io->S_update.size() - 1;
+    int target_min = 20;
+    int target_max = 99;
+    // ==进度条↑↑↑↑=================================
+
     for(auto &edge_:tc_io->S_update){
+
+        // ==进度条↓↓↓↓=================================
+        global_progress = target_min + ((i - i_min) / (i_max - i_min)) * (target_max - target_min);
+        i++;
+        // ==进度条↑↑↑↑=================================
+
         Label label{edge_.v_source_label, edge_.v_target_label, edge_.edge_label};
 
         auto finder = tc_offline_index->label_to_all_q_edge.find(label);

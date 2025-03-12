@@ -4,6 +4,11 @@
 
 #include "tc_match.h"
 
+// ==进度条=================================
+extern int global_progress; // 全局进度变量
+extern std::string global_status; // 全局状态变量
+// ==进度条=================================
+
 void signal_handler_index(int signum) {
     std::cout << "tcm: out of index time" << std::endl;
     exit(1);
@@ -15,6 +20,11 @@ void signal_handler_online(int signum) {
 }
 
 ResponseResult TCMatch(const RequestParameters& params) {
+    // ==进度条=================================
+    global_progress = 1;
+    global_status = "start";
+    // ==进度条=================================
+
     auto* tc_arg = new Arg();
     auto* tc_io = new IO();
     auto* tc_offline_index = new OfflineIndex();
@@ -39,6 +49,7 @@ ResponseResult TCMatch(const RequestParameters& params) {
     tc_arg->is_using_dynamic_merge = params.is_using_dynamic_merge.empty() ? "y" : params.is_using_dynamic_merge;
     tc_arg->is_return_match_result = params.is_return_match_result.empty() ? "y" : params.is_return_match_result;
 
+
     //=======================================================
     tc_arg->parse_dataset_name();
 
@@ -49,6 +60,11 @@ ResponseResult TCMatch(const RequestParameters& params) {
     std::tm* localTime = std::localtime(&currentTime);
 
     //============The program starts.====================================
+
+    // ==进度条=================================
+    global_progress = 5;
+    global_status = "loading";
+    // ==进度条=================================
 
     //Loading data
     tc_io->load_timing_query(tc_arg);
@@ -118,11 +134,17 @@ ResponseResult TCMatch(const RequestParameters& params) {
         response_result.all_time_constraint.all_time_constraint.emplace_back(jsonQEdgeVec);
     }
 
+
     //=====Starting the build phase.======
 #ifdef __linux__
     signal(SIGALRM, signal_handler_index);
     alarm(std::stoi(tc_arg->index_time_limit));
 #endif
+
+    // ==进度条=================================
+    global_progress = 10;
+    global_status = "building";
+    // ==进度条=================================
 
     //build offline index
     tc_offline_index->build_offline_index(tc_io);
@@ -154,6 +176,12 @@ ResponseResult TCMatch(const RequestParameters& params) {
     }
 
     //===Starting the indexing phase.======================
+
+    // ==进度条=================================
+    global_progress = 15;
+    global_status = "indexing";
+    // ==进度条=================================
+
     tc_global_index->index_time_start = T_NOW;
 
     //==Initializing the global index.=========
@@ -169,6 +197,13 @@ ResponseResult TCMatch(const RequestParameters& params) {
     response_result.statistical_info.index_time = std::to_string(tc_global_index->index_time_span.count()) + " ms";
 
     //=====Starting the online phase.======
+
+    // ==进度条=================================
+    global_progress = 20;
+    global_status = "searching";
+    // ==进度条=================================
+
+
     tc_global_index->online_time_start = T_NOW;
 
 #ifdef __linux__
@@ -191,6 +226,12 @@ ResponseResult TCMatch(const RequestParameters& params) {
     response_result.statistical_info.memory_use = std::to_string(tc_misc->getMemoryUse() / 1024) + " MB";
     response_result.statistical_info.match_count = std::to_string(tc_search->match_count);
 
+    // ==进度条=================================
+    global_progress = 99;
+    global_status = "writing";
+    // ==进度条=================================
+
+
     //===Output the match result.======================
     if (tc_arg->is_return_match_result == "n") {
         delete tc_arg;
@@ -201,6 +242,11 @@ ResponseResult TCMatch(const RequestParameters& params) {
         delete tc_search;
         delete tc_misc;
         delete tc_g_index;
+
+        // ==进度条=================================
+        global_progress = 100;
+        global_status = "done";
+        // ==进度条=================================
 
         return response_result;
     }
@@ -290,6 +336,10 @@ ResponseResult TCMatch(const RequestParameters& params) {
     delete tc_search;
     delete tc_misc;
 
+    // ==进度条=================================
+    global_progress = 100;
+    global_status = "done";
+    // ==进度条=================================
 
     return response_result;
 }
