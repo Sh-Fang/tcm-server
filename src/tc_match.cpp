@@ -14,7 +14,7 @@ void signal_handler_online(int signum) {
     exit(1);
 }
 
-std::string TCMatch(const requestParameters& params) {
+ResponseResult TCMatch(const RequestParameters& params) {
     auto* tc_arg = new Arg();
     auto* tc_io = new IO();
     auto* tc_offline_index = new OfflineIndex();
@@ -24,17 +24,20 @@ std::string TCMatch(const requestParameters& params) {
     auto* tc_misc = new Misc();
     auto* tc_g_index = new GIndex();
 
+    ResponseResult response_result;
+
     tc_arg->path_of_stream = params.stream_path;
     tc_arg->path_of_query = params.query_path;
 
     tc_arg->path_of_result = params.result_mode.empty() ? R"(./)" : params.result_mode;
     tc_arg->result_mode = params.result_mode.empty() ? "qid" : params.result_mode;
-    tc_arg->execute_mode = params.execute_mode.empty() ? "enum" : params.execute_mode;
-    tc_arg->is_using_static_merge = params.is_using_static_merge.empty() ? "y" : params.is_using_static_merge;
+    tc_arg->execute_mode = params.execute_mode.empty() ? "count" : params.execute_mode;
     tc_arg->data_percent = params.data_percent.empty() ? "0.6" : params.data_percent;
     tc_arg->index_time_limit = params.index_time_limit.empty() ? "36000" : params.index_time_limit;
     tc_arg->online_time_limit = params.online_time_limit.empty() ? "3600" : params.online_time_limit;
+    tc_arg->is_using_static_merge = params.is_using_static_merge.empty() ? "y" : params.is_using_static_merge;
     tc_arg->is_using_dynamic_merge = params.is_using_dynamic_merge.empty() ? "y" : params.is_using_dynamic_merge;
+    tc_arg->is_return_match_result = params.is_return_match_result.empty() ? "y" : params.is_return_match_result;
 
     //=======================================================
     tc_arg->parse_dataset_name();
@@ -51,15 +54,69 @@ std::string TCMatch(const requestParameters& params) {
     tc_io->load_timing_query(tc_arg);
     tc_io->load_stream_2_data_graph_and_update_graph(tc_arg);
 
-    std::cerr << "tcm: ";
-    std::cerr << "dataset: " << tc_arg->streamFileNameWithoutExtension << " / ";
-    std::cerr << "query type: " << tc_arg->queryType << " / ";
-    std::cerr << "query: " << tc_arg->queryFileNameWithoutExtension << " / ";
-    std::cerr << "runtime: " << std::asctime(localTime) << " / ";
-    std::cerr << "update valid: " << tc_io->valid_update_edge_num << " / ";
-    std::cerr << "total update: " << tc_io->total_update_edge_num << " / ";
-    std::cerr << "valid percentage: " << ((double)tc_io->valid_update_edge_num / (double)tc_io->total_update_edge_num) * 100.0 << "% / ";
+    //========================================
+    response_result.statistical_info.runtime = std::asctime(localTime);
+    response_result.statistical_info.stream_file = tc_arg->path_of_stream;
+    response_result.statistical_info.query_file = tc_arg->path_of_query;
+    response_result.statistical_info.dataset = tc_arg->streamFileNameWithoutExtension;
+    response_result.statistical_info.query_type = tc_arg->queryType;
+    response_result.statistical_info.data_percent = tc_arg->data_percent;
+    response_result.statistical_info.total_q_edges = std::to_string(tc_io->Q.size());
+    response_result.statistical_info.total_s_edges = std::to_string(tc_io->S.size());
 
+    response_result.statistical_info.execution_mode = tc_arg->execute_mode;
+    response_result.statistical_info.result_mode = tc_arg->result_mode;
+
+    response_result.statistical_info.update_valid = std::to_string(tc_io->valid_update_edge_num);
+    response_result.statistical_info.total_update = std::to_string(tc_io->total_update_edge_num);
+    response_result.statistical_info.valid_percentage = std::to_string(((double)tc_io->valid_update_edge_num / (double)tc_io->total_update_edge_num) * 100.0) + "%";
+
+    // AllQuery all_query;
+    for(auto &it:tc_io->q_id_2_q_edge){
+        JsonQEdge jsonQEdge;
+        jsonQEdge.q_id = std::to_string(it.first);
+        jsonQEdge.src_id = std::to_string(it.second.u_source_id);
+        jsonQEdge.tar_id = std::to_string(it.second.u_target_id);
+        jsonQEdge.e_lab = std::to_string(it.second.u_edge_label);
+        jsonQEdge.src_lab = std::to_string(it.second.u_source_label);
+        jsonQEdge.tar_lab = std::to_string(it.second.u_target_label);
+        response_result.all_query.all_query.emplace_back(jsonQEdge);
+    }
+
+    // AllTimeConstraint all_time_constraint;
+    for(auto &it:tc_io->T){
+        std::vector<JsonQEdge> jsonQEdgeVec;
+        for(auto &it2:it){
+            if(it2 == it.back()){
+                for(auto &it3:tc_io->q_id_2_q_edge){
+                    if(it3.second == it2){
+                        JsonQEdge jsonQEdge;
+                        jsonQEdge.q_id = std::to_string(it3.first);
+                        jsonQEdge.src_id = std::to_string(it2.u_source_id);
+                        jsonQEdge.tar_id = std::to_string(it2.u_target_id);
+                        jsonQEdge.e_lab = std::to_string(it2.u_edge_label);
+                        jsonQEdge.src_lab = std::to_string(it2.u_source_label);
+                        jsonQEdge.tar_lab = std::to_string(it2.u_target_label);
+                        jsonQEdgeVec.emplace_back(jsonQEdge);
+                    }
+                }
+            } else{
+                for(auto &it3:tc_io->q_id_2_q_edge){
+                    if(it3.second == it2){
+                        JsonQEdge jsonQEdge;
+                        jsonQEdge.q_id = std::to_string(it3.first);
+                        jsonQEdge.src_id = std::to_string(it2.u_source_id);
+                        jsonQEdge.tar_id = std::to_string(it2.u_target_id);
+                        jsonQEdge.e_lab = std::to_string(it2.u_edge_label);
+                        jsonQEdge.src_lab = std::to_string(it2.u_source_label);
+                        jsonQEdge.tar_lab = std::to_string(it2.u_target_label);
+                        jsonQEdgeVec.emplace_back(jsonQEdge);
+                    }
+                }
+            }
+        }
+        response_result.all_time_constraint.all_time_constraint.emplace_back(jsonQEdgeVec);
+    }
 
     //=====Starting the build phase.======
 #ifdef __linux__
@@ -73,8 +130,30 @@ std::string TCMatch(const requestParameters& params) {
     //match order
     tc_order->build_search_order(tc_io, tc_offline_index);
 
+    // AllSearchOrder all_search_order;
+    for(auto &map_it:tc_order->search_order){
+        SearchOrder searchOrder;
+        for(auto &id2edge_it:tc_io->q_id_2_q_edge){
+            auto &q_edge = id2edge_it.second;
+            auto &q_id = id2edge_it.first;
+            auto &key = map_it.first;
+            if(q_edge == key.qe){
+                searchOrder.q_id = std::to_string(q_id);
+                break;
+            }
+        }
+
+        for(auto &key_it:map_it.second){
+            for(auto &id2edge_it:tc_io->q_id_2_q_edge){
+                if(id2edge_it.second == key_it.qe){
+                    searchOrder.order.emplace_back(std::to_string(id2edge_it.first));
+                }
+            }
+        }
+        response_result.all_search_order.all_search_order.emplace_back(searchOrder);
+    }
+
     //===Starting the indexing phase.======================
-    tc_global_index->index_RSS_size_start = tc_misc->get_current_RSS();
     tc_global_index->index_time_start = T_NOW;
 
     //==Initializing the global index.=========
@@ -83,19 +162,13 @@ std::string TCMatch(const requestParameters& params) {
     tc_global_index->index_time_end = T_NOW;
     tc_global_index->index_time_span = tc_global_index->index_time_end - tc_global_index->index_time_start;
 
-    tc_global_index->index_RSS_size_end = tc_misc->get_current_RSS();
-    tc_global_index->index_RSS_size_span = tc_global_index->index_RSS_size_end - tc_global_index->index_RSS_size_start;
-
 #ifdef __linux__
     alarm(0);
 #endif
 
-    std::cerr << "index time: "  << tc_global_index->index_time_span.count()  << " ms / ";
-    std::cerr << "index memory: " << (tc_global_index->index_RSS_size_span / 1024) / 1024    << " MB / " << (tc_global_index->index_RSS_size_span / 1024) << " KB / " << (tc_global_index->index_RSS_size_span ) << " B / ";
-
+    response_result.statistical_info.index_time = std::to_string(tc_global_index->index_time_span.count()) + " ms";
 
     //=====Starting the online phase.======
-    tc_global_index->online_RSS_size_start = tc_misc->get_current_RSS();
     tc_global_index->online_time_start = T_NOW;
 
 #ifdef __linux__
@@ -111,46 +184,102 @@ std::string TCMatch(const requestParameters& params) {
 
     tc_global_index->online_time_end = T_NOW;
     tc_global_index->online_time_span = tc_global_index->online_time_end - tc_global_index->online_time_start;
-    tc_global_index->online_RSS_size_end = tc_misc->get_current_RSS();
-    tc_global_index->online_RSS_size_span = tc_global_index->online_RSS_size_end - tc_global_index->online_RSS_size_start;
 
+    response_result.statistical_info.online_time = std::to_string(tc_global_index->online_time_span.count()) + " ms";
+    response_result.statistical_info.update_time = std::to_string(tc_global_index->online_time_span.count() - tc_global_index->search_time_span.count()) + " ms";
+    response_result.statistical_info.search_time = std::to_string(tc_global_index->search_time_span.count()) + " ms";
+    response_result.statistical_info.memory_use = std::to_string(tc_misc->getMemoryUse() / 1024) + " MB";
+    response_result.statistical_info.match_count = std::to_string(tc_search->match_count);
 
-    std::cerr << "online time: " << tc_global_index->online_time_span.count() << " ms / ";
-    std::cerr << "update time: " << tc_global_index->online_time_span.count() - tc_global_index->search_time_span.count() << " ms / ";
-    std::cerr << "search time: " << tc_global_index->search_time_span.count() << " ms / ";
-    std::cerr << "data percent: "  << tc_arg->data_percent << " / ";
-    std::cerr << "match count: " << tc_search->match_count << std::endl;
-    std::cerr << std::endl;
+    //===Output the match result.======================
+    if (tc_arg->is_return_match_result == "n") {
+        delete tc_arg;
+        delete tc_io;
+        delete tc_offline_index;
+        delete tc_order;
+        delete tc_global_index;
+        delete tc_search;
+        delete tc_misc;
+        delete tc_g_index;
 
-    //=====Starting the print phase.======
-    tc_misc->statistical_info << "=============== summary ===============" <<std::endl;
-    tc_misc->statistical_info << "online time: " << tc_global_index->online_time_span.count() << " ms / "<< std::endl;
-    tc_misc->statistical_info << "index time: "  << tc_global_index->index_time_span.count()  << " ms / "<< std::endl;
-    tc_misc->statistical_info << "update time: " << tc_global_index->online_time_span.count() - tc_global_index->search_time_span.count() << " ms / "<< std::endl;
-    tc_misc->statistical_info << "search time: " << tc_global_index->search_time_span.count() << " ms / "<< std::endl;
-    {
-        tc_misc->statistical_info << "connection time: " << tc_global_index->connection_time_span.count() << " / "<< std::endl;
-        tc_misc->statistical_info << "search check time: " << tc_search->check_time_span.count() << " ms / "<< std::endl;
-        tc_misc->statistical_info << "search enum time: " << tc_search->enum_time_span.count() << " ms / "<< std::endl;
+        return response_result;
     }
-    tc_misc->statistical_info << "getMemoryUse: " << (tc_misc->getMemoryUse() / 1024)     << " MB / " << tc_misc->getMemoryUse() << " KB / " << std::endl;
-    tc_misc->statistical_info << "index memory: " << (tc_global_index->index_RSS_size_span / 1024) / 1024    << " MB / " << (tc_global_index->index_RSS_size_span / 1024) << " KB / " << (tc_global_index->index_RSS_size_span ) << " B / "<< std::endl;
-    tc_misc->statistical_info << "online memory: " << (tc_global_index->online_RSS_size_span / 1024) / 1024    << " MB / "<< std::endl;
-    tc_misc->statistical_info << "data percent: "  << tc_arg->data_percent << " / "<< std::endl;
-    {
 
-        tc_misc->statistical_info << "duplicated edge count: " << tc_global_index->duplicated_edge_count << " / "<< std::endl;
-        tc_misc->statistical_info << "because copy link count: " << tc_global_index->because_copy_link_count << " / "<< std::endl;
-        tc_misc->statistical_info << "because succ edge count: " << tc_global_index->because_succ_edge_count << " / "<< std::endl;
-        tc_misc->statistical_info << "data valid: " << tc_io->valid_data_edge_num << " / "<< std::endl;
-        tc_misc->statistical_info << "total data: " << tc_io->total_data_edge_num << " / "<< std::endl;
-        tc_misc->statistical_info << "update valid: " << tc_io->valid_update_edge_num << " / "<< std::endl;
-        tc_misc->statistical_info << "total update: " << tc_io->total_update_edge_num << " / "<< std::endl;
-        tc_misc->statistical_info << "valid percentage: " << ((double)tc_io->valid_update_edge_num / (double)tc_io->total_update_edge_num) * 100.0 << "% / "<< std::endl;
+
+    uit max_result_number = 0;
+
+    if(tc_arg->result_mode == "qid"){
+        for (const auto &sub_vec : tc_search->match_result) {
+            std::vector<JsonSEdge> jsonSEdgeVec;
+            for(auto &it:tc_io->q_id_2_q_edge){
+                uit q_id = it.first;
+                for (const auto &elem : sub_vec) {
+                    if(q_id == elem.q_id){
+                        JsonSEdge jsonSEdge;
+                        jsonSEdge.src_id = std::to_string(elem.source_id);
+                        jsonSEdge.tar_id = std::to_string(elem.target_id);
+                        jsonSEdge.e_lab = std::to_string(elem.edge_label);
+                        jsonSEdge.src_lab = std::to_string(elem.source_label);
+                        jsonSEdge.tar_lab = std::to_string(elem.target_label);
+                        jsonSEdge.timestamp = std::to_string(elem.timestamp);
+                        jsonSEdgeVec.emplace_back(jsonSEdge);
+                        break;
+                    }
+                }
+            }
+            response_result.all_match_result.all_match_result.emplace_back(jsonSEdgeVec);
+
+            max_result_number += 1;
+
+            if(max_result_number > 1000){  //Avoiding excessively large match.result files.
+                break;
+            }
+        }
+    } else if (tc_arg->result_mode == "time"){
+        std::vector<uit> time_stamp_all;
+        for (const auto &sub_vec : tc_search->match_result) {
+            std::vector<JsonSEdge> jsonSEdgeVec;
+            for(auto &elem:sub_vec){
+                time_stamp_all.emplace_back(elem.timestamp);
+            }
+
+            std::sort(time_stamp_all.begin(), time_stamp_all.end());
+
+            for(auto &time_it:time_stamp_all){
+                for(auto &elem:sub_vec){
+                    if(elem.timestamp == time_it){
+                        JsonSEdge jsonSEdge;
+                        jsonSEdge.src_id = std::to_string(elem.source_id);
+                        jsonSEdge.tar_id = std::to_string(elem.target_id);
+                        jsonSEdge.e_lab = std::to_string(elem.edge_label);
+                        jsonSEdge.src_lab = std::to_string(elem.source_label);
+                        jsonSEdge.tar_lab = std::to_string(elem.target_label);
+                        jsonSEdge.timestamp = std::to_string(elem.timestamp);
+                        jsonSEdgeVec.emplace_back(jsonSEdge);
+                        break;
+                    }
+                }
+            }
+            response_result.all_match_result.all_match_result.emplace_back(jsonSEdgeVec);
+
+            time_stamp_all.clear();
+        }
+    } else{
+        for (const auto &sub_vec : tc_search->match_result) {
+            std::vector<JsonSEdge> jsonSEdgeVec;
+            for(auto &elem:sub_vec){
+                JsonSEdge jsonSEdge;
+                jsonSEdge.src_id = std::to_string(elem.source_id);
+                jsonSEdge.tar_id = std::to_string(elem.target_id);
+                jsonSEdge.e_lab = std::to_string(elem.edge_label);
+                jsonSEdge.src_lab = std::to_string(elem.source_label);
+                jsonSEdge.tar_lab = std::to_string(elem.target_label);
+                jsonSEdge.timestamp = std::to_string(elem.timestamp);
+                jsonSEdgeVec.emplace_back(jsonSEdge);
+            }
+            response_result.all_match_result.all_match_result.emplace_back(jsonSEdgeVec);
+        }
     }
-    tc_misc->statistical_info << "match count: " << tc_search->match_count<< std::endl;
-
-    auto result = tc_misc->statistical_info.str();
 
     //============Clearing the memory====================================
     delete tc_arg;
@@ -162,5 +291,5 @@ std::string TCMatch(const requestParameters& params) {
     delete tc_misc;
 
 
-    return result;
+    return response_result;
 }

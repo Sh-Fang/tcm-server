@@ -13,11 +13,12 @@ public:
     std::string path_of_result;
     std::string result_mode;   // [time]: Sorting the results by timestamp; [qid]: Sorting the results by qid
     std::string execute_mode;  //[count]: Only count the results; [enum]: Enumerate the results.
-    std::string is_using_static_merge; //[y][n]
     std::string data_percent; //[0.6 default] 60% edge as data graph, 40% edge as update graph
     std::string index_time_limit;  //[36000 : 10 (hour)]
     std::string online_time_limit; //[3600 : 1 (hour)]
+    std::string is_using_static_merge; //[y][n]
     std::string is_using_dynamic_merge; //[y][n]
+    std::string is_return_match_result; //[y][n]
 
 
     int parse_arg(int argc, char * argv[]);

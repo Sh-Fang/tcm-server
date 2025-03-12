@@ -27,6 +27,6 @@ void signal_handler_index(int signum);
 void signal_handler_online(int signum);
 //================================
 
-std::string TCMatch(const requestParameters& params);
+ResponseResult TCMatch(const RequestParameters& params);
 
 #endif //TCMSERVER_TC_MATCH_H

@@ -5,13 +5,11 @@
 void handleMatch(const httplib::Request& req, httplib::Response& res) {
     try {
         json request_json = json::parse(req.body);
-        requestParameters input = parseInput(request_json);
+        RequestParameters input = parseInput(request_json);
 
-        responseResult output;
-        output.match_result = TCMatch(input);
+        ResponseResult output = TCMatch(input);
 
-        json response_json;
-        response_json["match_result"] = output.match_result;
+        json response_json = output;
 
         res.set_content(response_json.dump(), "application/json");
     } catch (const std::exception&) {

@@ -6181,7 +6181,7 @@ enum class input_format_t { json, cbor, msgpack, ubjson, bson, bjdata };
 
 #ifndef JSON_NO_IO
 /*!
-requestParameters adapter for stdio file access. This adapter read only 1 byte and do not use any
+RequestParameters adapter for stdio file access. This adapter read only 1 byte and do not use any
  buffer. This adapter is a very low level adapter.
 */
 class file_input_adapter
@@ -6214,7 +6214,7 @@ class file_input_adapter
 };
 
 /*!
-requestParameters adapter for a (caching) istream. Ignores a UFT Byte Order Mark at
+RequestParameters adapter for a (caching) istream. Ignores a UFT Byte Order Mark at
 beginning of input. Does not support changing the underlying std::streambuf
 in mid-input. Maintains underlying std::istream and std::streambuf to support
 subsequent use of standard std::istream operations to process any input
