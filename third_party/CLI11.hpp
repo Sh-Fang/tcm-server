@@ -3468,7 +3468,7 @@ inline std::string ignore_space(std::string item) {
 ///   one can recognize inputs like "100", "12kb", "100 MB",
 ///   that will be automatically transformed to 100, 14448, 104857600.
 ///
-/// jsonOutput number type matches the type in the provided mapping.
+/// responseResult number type matches the type in the provided mapping.
 /// Therefore, if it is required to interpret real inputs like "0.42 s",
 /// the mapping should be of a type <string, float> or <string, double>.
 class AsNumberWithUnit : public Validator {
@@ -3498,7 +3498,7 @@ class AsNumberWithUnit : public Validator {
 
             detail::rtrim(input);
             if(input.empty()) {
-                throw ValidationError("jsonInput is empty");
+                throw ValidationError("requestParameters is empty");
             }
 
             // Find split position between number and prefix

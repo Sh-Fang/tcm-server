@@ -19,12 +19,14 @@
 #include "tc_misc.h"
 #include "tc_g_index.h"
 
+#include "jsonHandle.h"
+
 //==Signal processing function==============================
 void signal_handler_index(int signum);
 
 void signal_handler_online(int signum);
 //================================
 
-std::string TCMatch(const std::string& path_of_stream, const std::string& path_of_query);
+std::string TCMatch(const requestParameters& params);
 
 #endif //TCMSERVER_TC_MATCH_H

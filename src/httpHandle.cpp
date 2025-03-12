@@ -1,15 +1,14 @@
 #include "httpHandle.h"
 #include "tc_match.h"
-#include "jsonHandle.h"
 
 // 处理 HTTP 请求
 void handleMatch(const httplib::Request& req, httplib::Response& res) {
     try {
         json request_json = json::parse(req.body);
-        jsonInput input = parseInput(request_json);
+        requestParameters input = parseInput(request_json);
 
-        jsonOutput output;
-        output.match_result = TCMatch(input.stream_path, input.query_path);
+        responseResult output;
+        output.match_result = TCMatch(input);
 
         json response_json;
         response_json["match_result"] = output.match_result;
@@ -38,4 +37,17 @@ void logRequest(const httplib::Request& req, const httplib::Response& res) {
               << "Path: " << req.path << " | "
               << "Status: " << res.status << " | "
               << "Body: " << res.body << std::endl;
+}
+
+int startServer() {
+    httplib::Server server;
+
+    // 设置日志记录（只打印到控制台）
+    server.set_logger(logRequest);
+
+    server.Post("/match", handleMatch);
+    std::cout << "Server started on http://localhost:8081" << std::endl;
+
+    server.listen("0.0.0.0", 8081);
+    return 0;
 }

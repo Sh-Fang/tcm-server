@@ -14,7 +14,7 @@ void signal_handler_online(int signum) {
     exit(1);
 }
 
-std::string TCMatch(const std::string &path_of_stream, const std::string &path_of_query) {
+std::string TCMatch(const requestParameters& params) {
     auto* tc_arg = new Arg();
     auto* tc_io = new IO();
     auto* tc_offline_index = new OfflineIndex();
@@ -24,17 +24,17 @@ std::string TCMatch(const std::string &path_of_stream, const std::string &path_o
     auto* tc_misc = new Misc();
     auto* tc_g_index = new GIndex();
 
-    tc_arg->path_of_stream = path_of_stream;
-    tc_arg->path_of_query = path_of_query;
+    tc_arg->path_of_stream = params.stream_path;
+    tc_arg->path_of_query = params.query_path;
 
-    tc_arg->path_of_result = R"(./)";
-    tc_arg->result_mode = "qid";
-    tc_arg->execute_mode = "enum";
-    tc_arg->is_using_static_merge = "y";
-    tc_arg->data_percent = "0.6";
-    tc_arg->index_time_limit = "36000";
-    tc_arg->online_time_limit = "3600";
-    tc_arg->is_using_dynamic_merge = "y";
+    tc_arg->path_of_result = params.result_mode.empty() ? R"(./)" : params.result_mode;
+    tc_arg->result_mode = params.result_mode.empty() ? "qid" : params.result_mode;
+    tc_arg->execute_mode = params.execute_mode.empty() ? "enum" : params.execute_mode;
+    tc_arg->is_using_static_merge = params.is_using_static_merge.empty() ? "y" : params.is_using_static_merge;
+    tc_arg->data_percent = params.data_percent.empty() ? "0.6" : params.data_percent;
+    tc_arg->index_time_limit = params.index_time_limit.empty() ? "36000" : params.index_time_limit;
+    tc_arg->online_time_limit = params.online_time_limit.empty() ? "3600" : params.online_time_limit;
+    tc_arg->is_using_dynamic_merge = params.is_using_dynamic_merge.empty() ? "y" : params.is_using_dynamic_merge;
 
     //=======================================================
     tc_arg->parse_dataset_name();
