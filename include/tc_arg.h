@@ -19,6 +19,7 @@ public:
     std::string is_using_static_merge; //[y][n]
     std::string is_using_dynamic_merge; //[y][n]
     std::string is_return_match_result; //[y][n]
+    std::string max_match_count;
 
 
     int parse_arg(int argc, char * argv[]);

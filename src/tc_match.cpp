@@ -48,6 +48,7 @@ ResponseResult TCMatch(const RequestParameters& params) {
     tc_arg->is_using_static_merge = params.is_using_static_merge.empty() ? "y" : params.is_using_static_merge;
     tc_arg->is_using_dynamic_merge = params.is_using_dynamic_merge.empty() ? "y" : params.is_using_dynamic_merge;
     tc_arg->is_return_match_result = params.is_return_match_result.empty() ? "y" : params.is_return_match_result;
+    tc_arg->max_match_count = params.max_match_count.empty() ? "100" : params.max_match_count;
 
 
     //=======================================================
@@ -253,6 +254,7 @@ ResponseResult TCMatch(const RequestParameters& params) {
 
 
     uit max_result_number = 0;
+    uit limit = std::stoi(tc_arg->max_match_count);
 
     if(tc_arg->result_mode == "qid"){
         for (const auto &sub_vec : tc_search->match_result) {
@@ -277,7 +279,7 @@ ResponseResult TCMatch(const RequestParameters& params) {
 
             max_result_number += 1;
 
-            if(max_result_number > 1000){  //Avoiding excessively large match.result files.
+            if(max_result_number > limit){  //Avoiding excessively large match.result files.
                 break;
             }
         }

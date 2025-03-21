@@ -16,11 +16,15 @@ void handleMatch(const httplib::Request& req, httplib::Response& res) {
 
         json response_json = output;
 
+        global_progress = 100;
+
         res.set_content(response_json.dump(), "application/json");
     } catch (const std::exception&) {
         res.status = 400;
         res.set_content(R"({"error": "Invalid request"})", "application/json");
     }
+
+    global_progress = 0;
 }
 
 void handleGetProgress(const httplib::Request& req, httplib::Response& res) {
