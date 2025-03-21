@@ -7,9 +7,11 @@ using json = nlohmann::json;
 struct RequestParameters{
     std::string stream_path;
     std::string query_path;
+    std::string max_match_count;
+    std::string data_percent;
     std::string result_mode;
     std::string execute_mode;
-    std::string data_percent;
+    
     std::string index_time_limit;
     std::string online_time_limit;
     std::string is_using_static_merge;

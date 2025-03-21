@@ -85,7 +85,7 @@ ResponseResult TCMatch(const RequestParameters& params) {
 
     response_result.statistical_info.update_valid = std::to_string(tc_io->valid_update_edge_num);
     response_result.statistical_info.total_update = std::to_string(tc_io->total_update_edge_num);
-    response_result.statistical_info.valid_percentage = std::to_string(((double)tc_io->valid_update_edge_num / (double)tc_io->total_update_edge_num) * 100.0) + "%";
+    response_result.statistical_info.valid_percentage = std::to_string(((double)tc_io->valid_update_edge_num / (double)tc_io->total_update_edge_num) * 100.0);
 
     // AllQuery all_query;
     for(auto &it:tc_io->q_id_2_q_edge){
@@ -194,7 +194,7 @@ ResponseResult TCMatch(const RequestParameters& params) {
     alarm(0);
 #endif
 
-    response_result.statistical_info.index_time = std::to_string(tc_global_index->index_time_span.count()) + " ms";
+    response_result.statistical_info.index_time = std::to_string(tc_global_index->index_time_span.count());
 
     //=====Starting the online phase.======
 
@@ -220,10 +220,10 @@ ResponseResult TCMatch(const RequestParameters& params) {
     tc_global_index->online_time_end = T_NOW;
     tc_global_index->online_time_span = tc_global_index->online_time_end - tc_global_index->online_time_start;
 
-    response_result.statistical_info.online_time = std::to_string(tc_global_index->online_time_span.count()) + " ms";
-    response_result.statistical_info.update_time = std::to_string(tc_global_index->online_time_span.count() - tc_global_index->search_time_span.count()) + " ms";
-    response_result.statistical_info.search_time = std::to_string(tc_global_index->search_time_span.count()) + " ms";
-    response_result.statistical_info.memory_use = std::to_string(tc_misc->getMemoryUse() / 1024) + " MB";
+    response_result.statistical_info.online_time = std::to_string(tc_global_index->online_time_span.count());
+    response_result.statistical_info.update_time = std::to_string(tc_global_index->online_time_span.count() - tc_global_index->search_time_span.count());
+    response_result.statistical_info.search_time = std::to_string(tc_global_index->search_time_span.count());
+    response_result.statistical_info.memory_use = std::to_string(tc_misc->getMemoryUse() / 1024);
     response_result.statistical_info.match_count = std::to_string(tc_search->match_count);
 
     // ==进度条=================================

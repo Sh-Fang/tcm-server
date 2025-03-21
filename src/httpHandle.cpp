@@ -28,12 +28,8 @@ void handleGetProgress(const httplib::Request& req, httplib::Response& res) {
     res.set_header("Cache-Control", "no-cache");
     res.set_header("Connection", "keep-alive");
 
-    json json_data;
-    json_data["global_progress"] = std::to_string(global_progress);
-    json_data["global_status"] = global_status;
-
     res.status = 200;
-    res.set_content(json_data.dump(), "application/json");
+    res.set_content(std::to_string(global_progress), "text/plain");
 }
 
 
