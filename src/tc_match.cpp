@@ -279,7 +279,7 @@ ResponseResult TCMatch(const RequestParameters& params) {
 
             max_result_number += 1;
 
-            if(max_result_number > limit){  //Avoiding excessively large match.result files.
+            if(max_result_number >= limit){  //Avoiding excessively large match.result files.
                 break;
             }
         }
