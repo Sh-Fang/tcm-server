@@ -4,6 +4,9 @@
 
 #include "tc_match.h"
 
+#include <iomanip>  // 需要包含这个头文件
+#include <sstream>  // 用于 std::ostringstream
+
 // ==进度条=================================
 extern int global_progress; // 全局进度变量
 extern std::string global_status; // 全局状态变量
@@ -195,7 +198,10 @@ ResponseResult TCMatch(const RequestParameters& params) {
     alarm(0);
 #endif
 
-    response_result.statistical_info.index_time = std::to_string(tc_global_index->index_time_span.count());
+    std::ostringstream stream;
+    stream << std::fixed << std::setprecision(2) << tc_global_index->index_time_span.count();
+    response_result.statistical_info.index_time = stream.str();
+    // response_result.statistical_info.index_time = std::to_string(tc_global_index->index_time_span.count());
 
     //=====Starting the online phase.======
 
@@ -221,9 +227,18 @@ ResponseResult TCMatch(const RequestParameters& params) {
     tc_global_index->online_time_end = T_NOW;
     tc_global_index->online_time_span = tc_global_index->online_time_end - tc_global_index->online_time_start;
 
-    response_result.statistical_info.online_time = std::to_string(tc_global_index->online_time_span.count());
-    response_result.statistical_info.update_time = std::to_string(tc_global_index->online_time_span.count() - tc_global_index->search_time_span.count());
-    response_result.statistical_info.search_time = std::to_string(tc_global_index->search_time_span.count());
+    std::ostringstream stream1;
+    stream1 << std::fixed << std::setprecision(2) << tc_global_index->online_time_span.count();
+    response_result.statistical_info.online_time = stream1.str();
+
+    std::ostringstream stream2;
+    stream2 << std::fixed << std::setprecision(2) << (tc_global_index->online_time_span.count() - tc_global_index->search_time_span.count());
+    response_result.statistical_info.update_time = stream2.str();
+
+    std::ostringstream stream3;
+    stream3 << std::fixed << std::setprecision(2) << tc_global_index->search_time_span.count();
+    response_result.statistical_info.search_time = stream3.str();
+
     response_result.statistical_info.memory_use = std::to_string(tc_misc->getMemoryUse() / 1024);
     response_result.statistical_info.match_count = std::to_string(tc_search->match_count);
 
