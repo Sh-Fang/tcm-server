@@ -1,5 +1,3 @@
 #include "httpHandle.h"
 
-int main() {
-    return startServer();
-}
+int main() { return startServer(); }
